@@ -161,3 +161,17 @@ app.delete('/api/users/:id', async (req, res) => {
 app.listen(process.env.PORT || 3000, () =>
   console.log(`✅ CollegeMS running → http://localhost:${process.env.PORT || 3000}`)
 );
+app.post('/api/signup', async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  const hashed = bcrypt.hashSync(password, 10);
+
+  const { data, error } = await supabase
+    .from('users')
+    .insert({ name, email, password: hashed, role })
+    .select();
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.json({ message: "User created", user: data[0] });
+});
