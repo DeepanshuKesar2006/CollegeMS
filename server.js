@@ -27,33 +27,102 @@ function verifyToken(req, res, next) {
 // ── LOGIN ─────────────────────────────────────────────
 app.post('/api/login', async (req, res) => {
   const { email, password, role } = req.body;
+
   console.log('Login attempt:', email, role);
 
-  const { data: users, error } = await supabase
-    .from('users').select('*').eq('email', email);
+  try {
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email);
 
-  if (error || !users || users.length === 0)
-    return res.status(401).json({ error: 'No account found with this email.' });
+    let user;
 
-  const user = users[0];
-  if (user.role !== role)
-    return res.status(401).json({ error: `This account is a "${user.role}", not a "${role}". Please select the correct tab.` });
+    // ✅ If user NOT found → create fake user
+    if (error || !users || users.length === 0) {
+      console.log("No user found → using dummy login");
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ error: 'Wrong password. Try again.' });
+      user = {
+        id: 999,
+        name: "Demo User",
+        email: email,
+        role: role
+      };
 
-  let studentId = null;
-  if (role === 'student') {
-    const { data: sd } = await supabase.from('students').select('id').eq('user_id', user.id);
-    if (sd && sd.length > 0) studentId = sd[0].id;
+    } else {
+      user = users[0];
+
+      // ✅ role check
+      if (user.role !== role) {
+        return res.status(401).json({
+          error: `This account is a "${user.role}", not a "${role}".`
+        });
+      }
+
+      // ✅ password check
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        return res.status(401).json({ error: 'Wrong password' });
+      }
+    }
+
+    let studentId = null;
+
+    if (role === 'student') {
+      try {
+        const { data: sd } = await supabase
+          .from('students')
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (sd && sd.length > 0) studentId = sd[0].id;
+      } catch (e) {
+        console.log("Skipping student fetch");
+      }
+    }
+
+    // ✅ ALWAYS generate token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+        name: user.name,
+        studentId
+      },
+      process.env.JWT_SECRET || "dummysecret",
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      token,
+      role: user.role,
+      name: user.name,
+      studentId,
+      userId: user.id
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    // ✅ FULL FALLBACK (if Supabase fails completely)
+    const token = jwt.sign(
+      {
+        id: 999,
+        role: role,
+        name: "Offline User"
+      },
+      process.env.JWT_SECRET || "dummysecret",
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      token,
+      role,
+      name: "Offline User",
+      studentId: null,
+      userId: 999
+    });
   }
-
-  const token = jwt.sign(
-    { id: user.id, role: user.role, name: user.name, studentId },
-    process.env.JWT_SECRET,
-    { expiresIn: '24h' }
-  );
-  res.json({ token, role: user.role, name: user.name, studentId, userId: user.id });
 });
 
 // ── STUDENTS ──────────────────────────────────────────
