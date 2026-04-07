@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CollegeMS — Student Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy:#0a1628; --navy2:#0f2044; --blue:#1a56db; --blue2:#1e40af;
+    --accent:#38bdf8; --gold:#f59e0b; --green:#10b981; --red:#ef4444;
+    --purple:#8b5cf6; --white:#fff; --gray:#94a3b8; --light:#f1f5f9;
+    --sidebar-w:240px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Sora',sans-serif; background:#f1f5f9; display:flex; min-height:100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:var(--sidebar-w); background:var(--navy); min-height:100vh;
+    position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column;
+    z-index:100; box-shadow:4px 0 20px rgba(0,0,0,0.2);
+  }
+  .sidebar-top { padding:24px 20px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .logo { display:flex; align-items:center; gap:10px; }
+  .logo-box {
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(135deg,var(--blue),var(--accent));
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:700; color:white;
+  }
+  .logo-text { font-size:18px; font-weight:700; color:white; }
+  .logo-text span { color:var(--accent); }
+
+  .user-card { margin:16px 20px; padding:14px; background:rgba(255,255,255,0.06); border-radius:12px; border:1px solid rgba(255,255,255,0.08); }
+  .user-avatar {
+    width:40px; height:40px; border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--purple));
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:700; color:white; margin-bottom:10px;
+  }
+  .user-name { font-size:14px; font-weight:600; color:white; }
+  .user-role { font-size:11px; color:var(--accent); font-family:'JetBrains Mono',monospace; }
+  .user-roll { font-size:11px; color:var(--gray); margin-top:2px; }
+
+  .nav { flex:1; padding:10px 12px; }
+  .nav-section { font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:1.5px; padding:12px 8px 6px; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:10px 12px;
+    border-radius:10px; cursor:pointer; margin:2px 0;
+    font-size:14px; color:rgba(255,255,255,0.6); transition:all 0.2s;
+  }
+  .nav-item:hover { background:rgba(255,255,255,0.07); color:white; }
+  .nav-item.active { background:rgba(26,86,219,0.3); color:white; border-left:3px solid var(--blue); }
+  .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+  .nav-item .badge {
+    margin-left:auto; background:var(--red); color:white;
+    font-size:10px; padding:2px 6px; border-radius:20px; font-weight:600;
+  }
+  .logout-btn {
+    margin:16px 12px; padding:11px; border-radius:10px;
+    background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);
+    color:#fca5a5; cursor:pointer; font-size:13px; font-family:'Sora',sans-serif;
+    transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .logout-btn:hover { background:rgba(239,68,68,0.2); }
+
+  /* MAIN */
+  .main { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; min-height:100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    background:white; padding:16px 32px; display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:50;
+    box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  }
+  .topbar-left h2 { font-size:20px; font-weight:700; color:#1e293b; }
+  .topbar-left p { font-size:13px; color:var(--gray); }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .topbar-time { font-size:13px; color:var(--gray); font-family:'JetBrains Mono',monospace; }
+  .notif-btn {
+    width:38px; height:38px; border-radius:10px; border:1px solid #e2e8f0;
+    background:white; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:16px; position:relative; transition:all 0.2s;
+  }
+  .notif-btn:hover { background:#f8fafc; }
+  .notif-dot { position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:var(--red); }
+
+  /* CONTENT */
+  .content { padding:28px 32px; flex:1; }
+
+  /* STAT CARDS */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .stat-card {
+    background:white; border-radius:16px; padding:22px;
+    border:1px solid #e2e8f0; transition:all 0.3s; position:relative; overflow:hidden;
+  }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.1); }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  }
+  .stat-card.blue::before { background:linear-gradient(90deg,var(--blue),var(--accent)); }
+  .stat-card.green::before { background:linear-gradient(90deg,var(--green),#34d399); }
+  .stat-card.gold::before { background:linear-gradient(90deg,var(--gold),#fcd34d); }
+  .stat-card.purple::before { background:linear-gradient(90deg,var(--purple),#a78bfa); }
+  .stat-icon { font-size:28px; margin-bottom:12px; }
+  .stat-val { font-size:32px; font-weight:700; color:#1e293b; line-height:1; }
+  .stat-label { font-size:12px; color:var(--gray); margin-top:6px; }
+  .stat-trend { font-size:11px; margin-top:8px; }
+  .stat-trend.good { color:var(--green); }
+  .stat-trend.warn { color:var(--red); }
+
+  /* CHARTS ROW */
+  .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:24px; }
+  .chart-card { background:white; border-radius:16px; padding:22px; border:1px solid #e2e8f0; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .card-title { font-size:15px; font-weight:700; color:#1e293b; }
+  .card-sub { font-size:12px; color:var(--gray); }
+  .badge-pill { padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-green { background:#dcfce7; color:#166534; }
+  .badge-red { background:#fee2e2; color:#991b1b; }
+  .badge-blue { background:#dbeafe; color:#1e40af; }
+  .badge-gold { background:#fef3c7; color:#92400e; }
+
+  /* BOTTOM ROW */
+  .bottom-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+
+  /* RESULTS TABLE */
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; padding:10px 14px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid #f1f5f9; }
+  td { padding:12px 14px; font-size:13px; color:#374151; border-bottom:1px solid #f8fafc; }
+  tr:hover td { background:#fafafa; }
+
+  /* TIMETABLE */
+  .timetable { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
+  .tt-slot {
+    min-width:110px; padding:14px; border-radius:12px; border:1px solid #e2e8f0;
+    text-align:center; flex-shrink:0; transition:all 0.2s;
+  }
+  .tt-slot:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.08); }
+  .tt-slot.current { background:linear-gradient(135deg,var(--blue),var(--blue2)); border:none; }
+  .tt-slot.current .tt-subj, .tt-slot.current .tt-time { color:white; }
+  .tt-time { font-size:11px; color:var(--gray); margin-bottom:6px; }
+  .tt-subj { font-size:13px; font-weight:600; color:#1e293b; }
+  .tt-room { font-size:11px; color:var(--gray); margin-top:4px; }
+  .tt-break { background:#f8fafc; }
+  .tt-break .tt-subj { color:var(--gray); }
+
+  /* ANNOUNCEMENTS */
+  .ann-item {
+    padding:14px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:10px;
+    display:flex; gap:12px; transition:all 0.2s; cursor:pointer;
+  }
+  .ann-item:hover { border-color:#bfdbfe; background:#eff6ff; }
+  .ann-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .ann-dot.blue { background:var(--blue); }
+  .ann-dot.gold { background:var(--gold); }
+  .ann-dot.red { background:var(--red); }
+  .ann-title { font-size:13px; font-weight:600; color:#1e293b; }
+  .ann-msg { font-size:12px; color:var(--gray); margin-top:3px; }
+  .ann-time { font-size:11px; color:#cbd5e1; margin-top:5px; }
+
+  /* ATT BAR */
+  .att-bar-wrap { margin-bottom:14px; }
+  .att-bar-header { display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px; }
+  .att-bar-label { color:#374151; font-weight:500; }
+  .att-bar-pct { font-weight:700; }
+  .att-bar-bg { height:8px; background:#f1f5f9; border-radius:50px; overflow:hidden; }
+  .att-bar-fill { height:100%; border-radius:50px; transition:width 1s ease; }
+
+  /* PAGE SECTIONS */
+  .page-section { display:none; }
+  .page-section.active { display:block; }
+
+  @media(max-width:1200px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .charts-row,.bottom-row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo">
+      <div class="logo-box">C</div>
+      <div class="logo-text">College<span>MS</span></div>
+    </div>
+  </div>
+
+  <div class="user-card">
+    <div class="user-avatar" id="user-avatar">A</div>
+    <div class="user-name" id="sidebar-name">Student</div>
+    <div class="user-role">🎓 STUDENT PORTAL</div>
+    <div class="user-roll" id="sidebar-roll">Loading...</div>
+  </div>
+
+  <div class="nav">
+    <div class="nav-section">Main Menu</div>
+    <div class="nav-item active" onclick="showSection('dashboard',this)">
+      <span class="icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showSection('attendance',this)">
+      <span class="icon">📊</span> My Attendance
+    </div>
+    <div class="nav-item" onclick="showSection('results',this)">
+      <span class="icon">📝</span> My Results
+    </div>
+    <div class="nav-item" onclick="showSection('timetable',this)">
+      <span class="icon">🗓</span> Timetable
+    </div>
+    <div class="nav-item" onclick="showSection('announcements',this)">
+      <span class="icon">📢</span> Announcements <span class="badge" id="ann-badge">0</span>
+    </div>
+    <div class="nav-section">Account</div>
+    <div class="nav-item" onclick="showSection('profile',this)">
+      <span class="icon">👤</span> My Profile
+    </div>
+  </div>
+
+  <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2 id="page-title">Dashboard Overview</h2>
+      <p id="page-sub">Welcome back! Here's your academic summary.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="clock"></div>
+      <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD SECTION -->
+    <div class="page-section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon">📊</div>
+          <div class="stat-val" id="att-stat">—</div>
+          <div class="stat-label">Overall Attendance</div>
+          <div class="stat-trend" id="att-trend">Loading...</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📚</div>
+          <div class="stat-val">6</div>
+          <div class="stat-label">Subjects Enrolled</div>
+          <div class="stat-trend good">↑ Semester 2</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon">💰</div>
+          <div class="stat-val">₹4,500</div>
+          <div class="stat-label">Pending Fees</div>
+          <div class="stat-trend warn">⚠ Due 31 Jan</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">📅</div>
+          <div class="stat-val" id="exam-countdown">—</div>
+          <div class="stat-label">Days to Next Exam</div>
+          <div class="stat-trend good">📖 Mid Term</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <div><div class="card-title">Subject-wise Attendance (%)</div><div class="card-sub">Current semester</div></div>
+            <span class="badge-pill badge-blue">Live</span>
+          </div>
+          <div style="position:relative;height:200px;"><canvas id="attChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-header">
+            <div><div class="card-title">Result Summary</div><div class="card-sub">Pass/Fail ratio</div></div>
+          </div>
+          <div style="position:relative;height:200px;"><canvas id="resultPieChart"></canvas></div>
+        </div>
+      </div>
+
+      <div style="background:white;border-radius:16px;padding:22px;border:1px solid #e2e8f0;margin-bottom:24px;">
+        <div class="card-header">
+          <div><div class="card-title">🗓 Today's Timetable</div><div class="card-sub" id="today-day">Monday</div></div>
+        </div>
+        <div class="timetable" id="timetable-strip"></div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="chart-card">
+          <div class="card-header"><div class="card-title">📝 Recent Results</div></div>
+          <table>
+            <thead><tr><th>Subject</th><th>Marks</th><th>Grade</th><th>Status</th></tr></thead>
+            <tbody id="results-mini"></tbody>
+          </table>
+        </div>
+        <div class="chart-card">
+          <div class="card-header"><div class="card-title">📢 Announcements</div></div>
+          <div id="ann-mini"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE SECTION -->
+    <div class="page-section" id="sec-attendance">
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="card-header"><div class="card-title">Subject-wise Attendance Breakdown</div></div>
+        <div id="att-bars"></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Attendance History</div></div>
+        <table>
+          <thead><tr><th>Date</th><th>Subject</th><th>Status</th><th>Reason</th></tr></thead>
+          <tbody id="att-full-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RESULTS SECTION -->
+    <div class="page-section" id="sec-results">
+      <div class="stats-grid" style="margin-bottom:20px;">
+        <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-val" id="avg-marks">—</div><div class="stat-label">Average Marks</div></div>
+        <div class="stat-card green"><div class="stat-icon">🏆</div><div class="stat-val" id="best-marks">—</div><div class="stat-label">Best Score</div></div>
+        <div class="stat-card gold"><div class="stat-icon">📈</div><div class="stat-val" id="cgpa-val">—</div><div class="stat-label">CGPA</div></div>
+        <div class="stat-card purple"><div class="stat-icon">✅</div><div class="stat-val" id="pass-count">—</div><div class="stat-label">Subjects Passed</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">All Results</div></div>
+        <table>
+          <thead><tr><th>Subject</th><th>Exam Type</th><th>Marks</th><th>Max</th><th>Grade</th><th>Status</th></tr></thead>
+          <tbody id="results-full"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TIMETABLE SECTION -->
+    <div class="page-section" id="sec-timetable">
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">Weekly Timetable</div></div>
+        <div id="full-timetable"></div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS SECTION -->
+    <div class="page-section" id="sec-announcements">
+      <div class="chart-card">
+        <div class="card-header"><div class="card-title">All Announcements</div></div>
+        <div id="ann-full"></div>
+      </div>
+    </div>
+
+    <!-- PROFILE SECTION -->
+    <div class="page-section" id="sec-profile">
+      <div class="chart-card" style="max-width:600px;">
+        <div class="card-header"><div class="card-title">My Profile</div></div>
+        <div id="profile-content"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const token = localStorage.getItem('token');
+const role = localStorage.getItem('role');
+const name = localStorage.getItem('name') || 'Student';
+const studentId = localStorage.getItem('studentId') || 1;
+
+if (!token || role !== 'student') location.href = '/';
+
+// Setup user info
+document.getElementById('sidebar-name').textContent = name;
+document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+document.getElementById('sidebar-roll').textContent = 'ID: ' + studentId;
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+updateClock(); setInterval(updateClock, 1000);
+
+// Day
+const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const todayDay = days[new Date().getDay()];
+document.getElementById('today-day').textContent = todayDay;
+const el = document.getElementById('page-title');
+
+// Timetable data
+const timetableData = {
+  Monday:    [{t:'9:00',s:'Mathematics',r:'R-101'},{t:'10:00',s:'Physics',r:'R-102'},{t:'11:00',s:'Break',r:''},{t:'11:30',s:'CS Lab',r:'Lab-1'},{t:'1:00',s:'English',r:'R-201'},{t:'2:00',s:'DSA',r:'R-101'}],
+  Tuesday:   [{t:'9:00',s:'Physics',r:'R-102'},{t:'10:00',s:'Mathematics',r:'R-101'},{t:'11:00',s:'Break',r:''},{t:'11:30',s:'English',r:'R-201'},{t:'1:00',s:'DSA',r:'R-101'},{t:'2:00',s:'CS Lab',r:'Lab-1'}],
+  Wednesday: [{t:'9:00',s:'DSA',r:'R-101'},{t:'10:00',s:'English',r:'R-201'},{t:'11:00',s:'Break',r:''},{t:'11:30',s:'Mathematics',r:'R-101'},{t:'1:00',s:'Physics',r:'R-102'},{t:'2:00',s:'Sports',r:'Ground'}],
+  Thursday:  [{t:'9:00',s:'Mathematics',r:'R-101'},{t:'10:00',s:'DSA',r:'R-101'},{t:'11:00',s:'Break',r:''},{t:'11:30',s:'CS Lab',r:'Lab-1'},{t:'1:00',s:'Physics',r:'R-102'},{t:'2:00',s:'English',r:'R-201'}],
+  Friday:    [{t:'9:00',s:'English',r:'R-201'},{t:'10:00',s:'Mathematics',r:'R-101'},{t:'11:00',s:'Break',r:''},{t:'11:30',s:'Physics',r:'R-102'},{t:'1:00',s:'CS Lab',r:'Lab-1'},{t:'2:00',s:'DSA',r:'R-101'}],
+  Saturday:  [{t:'9:00',s:'Mathematics',r:'R-101'},{t:'10:00',s:'Physics',r:'R-102'},{t:'11:00',s:'CS Lab',r:'Lab-1'},{t:'12:00',s:'Break',r:''}],
+  Sunday:    []
+};
+
+// Render timetable strip
+function renderTTStrip(day) {
+  const slots = timetableData[day] || [];
+  const now = new Date();
+  const currentHour = now.getHours();
+  const strip = document.getElementById('timetable-strip');
+  if (slots.length === 0) { strip.innerHTML = '<p style="color:#94a3b8;font-size:14px;padding:20px">No classes today 🎉</p>'; return; }
+  strip.innerHTML = slots.map(s => {
+    const h = parseInt(s.t.split(':')[0]);
+    const isCurrent = h === currentHour;
+    const isBreak = s.s === 'Break';
+    return `<div class="tt-slot ${isCurrent ? 'current' : ''} ${isBreak ? 'tt-break' : ''}">
+      <div class="tt-time">${s.t}</div>
+      <div class="tt-subj">${s.s}</div>
+      <div class="tt-room">${s.r || '—'}</div>
+    </div>`;
+  }).join('');
+}
+renderTTStrip(todayDay);
+
+// Render full timetable
+function renderFullTT() {
+  const days2 = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const container = document.getElementById('full-timetable');
+  container.innerHTML = days2.map(day => {
+    const slots = timetableData[day] || [];
+    return `<div style="margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:10px;padding:8px 12px;background:#f8fafc;border-radius:8px;">${day}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${slots.map(s => `<div style="padding:10px 14px;border-radius:10px;border:1px solid #e2e8f0;min-width:100px;text-align:center;background:white;">
+          <div style="font-size:11px;color:#94a3b8;">${s.t}</div>
+          <div style="font-size:13px;font-weight:600;color:#1e293b;">${s.s}</div>
+          <div style="font-size:11px;color:#94a3b8;">${s.r || ''}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Exam countdown
+const examDate = new Date();
+examDate.setDate(examDate.getDate() + 12);
+document.getElementById('exam-countdown').textContent = '12';
+
+// Section switching
+function showSection(name, el) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  el.classList.add('active');
+  const titles = { dashboard:'Dashboard Overview', attendance:'My Attendance', results:'My Results', timetable:'Weekly Timetable', announcements:'Announcements', profile:'My Profile' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  document.getElementById('page-sub').textContent = '';
+  if (name === 'timetable') renderFullTT();
+  if (name === 'profile') renderProfile();
+}
+
+async function loadAllData() {
+  try {
+    const [resultsRes, attRes, annRes] = await Promise.all([
+      fetch('/api/results/' + studentId),
+      fetch('/api/attendance/' + studentId),
+      fetch('/api/announcements')
+    ]);
+    const results = await resultsRes.json();
+    const att = await attRes.json();
+    const ann = await annRes.json();
+
+    // Attendance stat
+    const attPct = att && att.length > 0 ? Math.round(att.filter(a => a.status === 'P').length / att.length * 100) : 0;
+    document.getElementById('att-stat').textContent = attPct + '%';
+    const trend = document.getElementById('att-trend');
+    if (attPct >= 75) { trend.textContent = '✓ Good standing'; trend.className = 'stat-trend good'; }
+    else { trend.textContent = '⚠ Below 75% — Risk!'; trend.className = 'stat-trend warn'; }
+
+    // Attendance chart
+    const subjects = ['Maths','Physics','CS','English','DSA','DBMS'];
+    const subjectAtt = subjects.map(sub => {
+      const recs = att.filter(a => a.subject && a.subject.toLowerCase().includes(sub.toLowerCase().substring(0,4)));
+      if (recs.length === 0) return Math.floor(Math.random() * 20) + 75;
+      return Math.round(recs.filter(r => r.status === 'P').length / recs.length * 100);
+    });
+    new Chart(document.getElementById('attChart'), {
+      type: 'bar',
+      data: {
+        labels: subjects,
+        datasets: [{ label: 'Attendance %', data: subjectAtt,
+          backgroundColor: subjectAtt.map(v => v >= 75 ? 'rgba(16,185,129,0.8)' : 'rgba(239,68,68,0.8)'),
+          borderRadius: 8, borderSkipped: false }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ y:{ min:0,max:100, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{callback:v=>v+'%'} }, x:{grid:{display:false}} } }
+    });
+
+    // Results
+    const passCount = results ? results.filter(r => r.marks >= r.max_marks * 0.4).length : 0;
+    const failCount = results ? results.length - passCount : 0;
+    new Chart(document.getElementById('resultPieChart'), {
+      type: 'doughnut',
+      data: { labels: ['Pass','Fail'], datasets: [{ data: [passCount || 4, failCount || 1], backgroundColor: ['#10b981','#ef4444'], borderWidth: 0 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{font:{size:12}} } } }
+    });
+
+    // Results mini table
+    const rBody = document.getElementById('results-mini');
+    if (results && results.length > 0) {
+      rBody.innerHTML = results.slice(0,5).map(r => {
+        const pass = r.marks >= r.max_marks * 0.4;
+        return `<tr><td>${r.subject}</td><td><b>${r.marks}/${r.max_marks}</b></td><td>${r.grade}</td><td><span class="badge-pill ${pass ? 'badge-green' : 'badge-red'}">${pass ? 'Pass' : 'Fail'}</span></td></tr>`;
+      }).join('');
+    } else {
+      rBody.innerHTML = '<tr><td colspan="4" style="color:#94a3b8;text-align:center;padding:20px">No results added yet</td></tr>';
+    }
+
+    // Results full section
+    if (results && results.length > 0) {
+      const allMarks = results.map(r => (r.marks / r.max_marks) * 100);
+      document.getElementById('avg-marks').textContent = Math.round(allMarks.reduce((a,b) => a+b, 0) / allMarks.length) + '%';
+      document.getElementById('best-marks').textContent = Math.max(...results.map(r => r.marks)) + '/' + results[0].max_marks;
+      document.getElementById('pass-count').textContent = passCount + '/' + results.length;
+      document.getElementById('cgpa-val').textContent = localStorage.getItem('cgpa') || '8.5';
+      document.getElementById('results-full').innerHTML = results.map(r => {
+        const pass = r.marks >= r.max_marks * 0.4;
+        return `<tr><td><b>${r.subject}</b></td><td>${r.exam_type || 'Mid Term'}</td><td>${r.marks}</td><td>${r.max_marks}</td><td><b>${r.grade}</b></td><td><span class="badge-pill ${pass ? 'badge-green' : 'badge-red'}">${pass ? 'Pass ✓' : 'Fail ✗'}</span></td></tr>`;
+      }).join('');
+    } else {
+      document.getElementById('results-full').innerHTML = '<tr><td colspan="6" style="color:#94a3b8;text-align:center;padding:30px">No results available yet</td></tr>';
+    }
+
+    // Attendance section bars
+    const attBarsDiv = document.getElementById('att-bars');
+    attBarsDiv.innerHTML = subjects.map((s, i) => {
+      const v = subjectAtt[i]; const color = v >= 75 ? '#10b981' : '#ef4444';
+      return `<div class="att-bar-wrap">
+        <div class="att-bar-header"><span class="att-bar-label">${s}</span><span class="att-bar-pct" style="color:${color}">${v}%</span></div>
+        <div class="att-bar-bg"><div class="att-bar-fill" style="width:${v}%;background:${color}"></div></div>
+      </div>`;
+    }).join('');
+
+    // Attendance history table
+    const attTbl = document.getElementById('att-full-table');
+    if (att && att.length > 0) {
+      attTbl.innerHTML = att.map(a => `
+        <tr><td>${a.date}</td><td>${a.subject}</td>
+        <td><span class="badge-pill ${a.status==='P'?'badge-green':a.status==='L'?'badge-gold':'badge-red'}">${a.status==='P'?'Present':a.status==='L'?'Leave':'Absent'}</span></td>
+        <td style="color:#94a3b8">${a.reason || '—'}</td></tr>`).join('');
+    } else {
+      attTbl.innerHTML = '<tr><td colspan="4" style="color:#94a3b8;text-align:center;padding:20px">No attendance records yet</td></tr>';
+    }
+
+    // Announcements
+    document.getElementById('ann-badge').textContent = ann ? ann.length : 0;
+    const colors = ['blue','gold','red','blue'];
+    const annHtml = ann && ann.length > 0
+      ? ann.map((a, i) => `<div class="ann-item"><div class="ann-dot ${colors[i%4]}"></div><div><div class="ann-title">${a.title}</div><div class="ann-msg">${a.message}</div><div class="ann-time">${new Date(a.created_at).toLocaleDateString('en-IN')}</div></div></div>`).join('')
+      : '<p style="color:#94a3b8;padding:20px;text-align:center">No announcements yet</p>';
+    document.getElementById('ann-mini').innerHTML = ann ? ann.slice(0,3).map((a,i) => `<div class="ann-item"><div class="ann-dot ${colors[i%4]}"></div><div><div class="ann-title">${a.title}</div><div class="ann-msg">${a.message}</div></div></div>`).join('') : '';
+    document.getElementById('ann-full').innerHTML = annHtml;
+
+  } catch(e) {
+    console.error('Error loading data:', e);
+  }
+}
+
+function renderProfile() {
+  document.getElementById('profile-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #f1f5f9;">
+      <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:white;">${name.charAt(0)}</div>
+      <div><div style="font-size:20px;font-weight:700;color:#1e293b;">${name}</div><div style="color:#94a3b8;font-size:13px;margin-top:4px;">Student Portal</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      ${[['Name',name],['Role','Student'],['Student ID',studentId],['Department','CSE'],['CGPA','8.5'],['Status','Active']].map(([k,v]) =>
+        `<div style="padding:14px;background:#f8fafc;border-radius:10px;"><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">${k}</div><div style="font-size:14px;font-weight:600;color:#1e293b;">${v}</div></div>`
+      ).join('')}
+    </div>`;
+}
+
+function logout() { localStorage.clear(); location.href = '/'; }
+
+loadAllData();
+</script>
+</body>
+</html>

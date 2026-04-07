@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CollegeMS — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a1628;
+    --navy2: #0f2044;
+    --blue: #1a56db;
+    --blue2: #1e40af;
+    --accent: #38bdf8;
+    --accent2: #06b6d4;
+    --gold: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --white: #ffffff;
+    --gray: #94a3b8;
+    --light: #f8fafc;
+    --card: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    background: var(--navy);
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Animated background */
+  .bg-animated {
+    position: fixed; inset: 0; z-index: 0;
+    background: linear-gradient(135deg, #0a1628 0%, #0f2044 50%, #0a1628 100%);
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(80px); opacity: 0.15; animation: float 8s ease-in-out infinite;
+  }
+  .orb1 { width: 500px; height: 500px; background: #1a56db; top: -100px; left: -100px; animation-delay: 0s; }
+  .orb2 { width: 400px; height: 400px; background: #06b6d4; bottom: -50px; right: -50px; animation-delay: 3s; }
+  .orb3 { width: 300px; height: 300px; background: #8b5cf6; top: 40%; left: 30%; animation-delay: 5s; }
+  @keyframes float {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+  }
+
+  /* Grid dots */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* LEFT PANEL */
+  .left {
+    position: relative; z-index: 1;
+    width: 50%; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 60px 70px;
+    border-right: 1px solid var(--border);
+  }
+  .logo-area { display: flex; align-items: center; gap: 14px; margin-bottom: 60px; }
+  .logo-box {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--blue), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: white;
+    box-shadow: 0 8px 32px rgba(26,86,219,0.4);
+  }
+  .logo-text { font-size: 22px; font-weight: 700; color: white; }
+  .logo-text span { color: var(--accent); }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2);
+    color: var(--accent); padding: 6px 14px; border-radius: 50px;
+    font-size: 12px; font-weight: 500; margin-bottom: 24px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .hero-badge::before { content: '●'; font-size: 8px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  h1 {
+    font-size: 48px; font-weight: 700; line-height: 1.1;
+    color: white; margin-bottom: 20px;
+  }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 16px; color: var(--gray); line-height: 1.7;
+    margin-bottom: 50px; max-width: 420px;
+  }
+
+  .features { display: flex; flex-direction: column; gap: 16px; }
+  .feature {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px; border-radius: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .feature:hover { background: rgba(56,189,248,0.06); border-color: rgba(56,189,248,0.2); transform: translateX(4px); }
+  .feat-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .feat-icon.blue { background: rgba(26,86,219,0.2); }
+  .feat-icon.cyan { background: rgba(6,182,212,0.2); }
+  .feat-icon.gold { background: rgba(245,158,11,0.2); }
+  .feat-icon.green { background: rgba(16,185,129,0.2); }
+  .feat-text strong { display: block; color: white; font-size: 14px; font-weight: 600; }
+  .feat-text span { color: var(--gray); font-size: 12px; }
+
+  .stats-row {
+    display: flex; gap: 32px; margin-top: 50px;
+    padding-top: 40px; border-top: 1px solid var(--border);
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 700; color: white; }
+  .stat-num span { color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* RIGHT PANEL */
+  .right {
+    position: relative; z-index: 1;
+    width: 50%; display: flex; align-items: center; justify-content: center;
+    padding: 60px 70px;
+  }
+
+  .login-card {
+    width: 100%; max-width: 440px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px; padding: 44px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+  }
+
+  .card-title { font-size: 28px; font-weight: 700; color: white; margin-bottom: 4px; }
+  .card-subtitle { font-size: 14px; color: var(--gray); margin-bottom: 32px; }
+
+  /* Role tabs */
+  .role-tabs { display: flex; gap: 6px; margin-bottom: 28px; padding: 5px; background: rgba(0,0,0,0.3); border-radius: 12px; }
+  .role-tab {
+    flex: 1; padding: 10px 6px; border: none; border-radius: 8px;
+    background: transparent; color: var(--gray);
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    font-family: 'Sora', sans-serif; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .role-tab:hover { color: white; }
+  .role-tab.active { background: var(--blue); color: white; box-shadow: 0 4px 16px rgba(26,86,219,0.4); }
+
+  /* Input */
+  .input-group { margin-bottom: 16px; }
+  .input-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+  .input-wrap { position: relative; }
+  .input-wrap .icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; pointer-events: none; z-index: 1;
+  }
+  input[type=email], input[type=password] {
+    width: 100%; padding: 13px 14px 13px 42px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; color: white; font-size: 14px;
+    font-family: 'Sora', sans-serif; outline: none; transition: all 0.3s;
+  }
+  input::placeholder { color: rgba(255,255,255,0.3); }
+  input:focus { border-color: var(--blue); background: rgba(26,86,219,0.1); box-shadow: 0 0 0 3px rgba(26,86,219,0.2); }
+
+  .remember-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .remember-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray); cursor: pointer; }
+  .remember-label input { width: 14px; height: 14px; accent-color: var(--blue); }
+  .forgot { font-size: 13px; color: var(--accent); text-decoration: none; }
+  .forgot:hover { text-decoration: underline; }
+
+  .btn-login {
+    width: 100%; padding: 15px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    color: white; font-size: 16px; font-weight: 600;
+    font-family: 'Sora', sans-serif; cursor: pointer;
+    transition: all 0.3s; position: relative; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(26,86,219,0.4);
+    margin-bottom: 20px;
+  }
+  .btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(26,86,219,0.5); }
+  .btn-login:active { transform: translateY(0); }
+  .btn-login.loading { opacity: 0.7; pointer-events: none; }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background: var(--border); }
+  .divider span { font-size: 12px; color: var(--gray); }
+
+  .sso-row { display: flex; gap: 10px; }
+  .btn-sso {
+    flex: 1; padding: 11px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    color: var(--gray); font-size: 13px; font-family: 'Sora', sans-serif;
+    cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-sso:hover { background: rgba(255,255,255,0.1); color: white; }
+
+  .help-text { text-align: center; margin-top: 24px; font-size: 12px; color: var(--gray); }
+  .help-text a { color: var(--accent); text-decoration: none; }
+
+  .error-msg {
+    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5; padding: 12px 16px; border-radius: 10px;
+    font-size: 13px; margin-bottom: 16px; display: none;
+    animation: shake 0.4s ease;
+  }
+  .error-msg.show { display: block; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  /* Demo credentials box */
+  .demo-box {
+    background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.15);
+    border-radius: 10px; padding: 14px; margin-top: 20px;
+  }
+  .demo-box p { font-size: 11px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .demo-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
+  }
+  .demo-item:last-child { border: none; }
+  .demo-item:hover { opacity: 0.7; }
+  .demo-item span { font-size: 12px; color: var(--gray); font-family: 'JetBrains Mono', monospace; }
+  .demo-item .fill-btn { font-size: 10px; color: var(--accent); background: rgba(56,189,248,0.1); padding: 2px 8px; border-radius: 4px; }
+
+  /* Mobile */
+  @media(max-width:900px) {
+    .left { display: none; }
+    .right { width: 100%; padding: 30px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-animated">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+<div class="grid-bg"></div>
+
+<div class="left">
+  <div class="logo-area">
+    <div class="logo-box">C</div>
+    <div class="logo-text">College<span>MS</span></div>
+  </div>
+
+  <div class="hero-badge">● LIVE SYSTEM v2.0</div>
+
+  <h1>Manage Your<br>College <span>Smarter</span></h1>
+  <p class="subtitle">A unified platform for students, teachers and admins — attendance, results, announcements, all in one place.</p>
+
+  <div class="features">
+    <div class="feature">
+      <div class="feat-icon blue">🔐</div>
+      <div class="feat-text">
+        <strong>Role-based Access Control</strong>
+        <span>Separate portals for Students, Teachers & Admins</span>
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feat-icon cyan">📊</div>
+      <div class="feat-text">
+        <strong>Real-time Attendance Tracking</strong>
+        <span>Mark & monitor attendance subject-wise daily</span>
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feat-icon gold">📝</div>
+      <div class="feat-text">
+        <strong>Automated Result Processing</strong>
+        <span>Upload marks, auto-grade, instant student view</span>
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feat-icon green">🔒</div>
+      <div class="feat-text">
+        <strong>Secure JWT Authentication</strong>
+        <span>Industry-grade encrypted login & session tokens</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">1<span>k+</span></div><div class="stat-label">Students</div></div>
+    <div class="stat"><div class="stat-num">48<span>+</span></div><div class="stat-label">Teachers</div></div>
+    <div class="stat"><div class="stat-num">6<span></span></div><div class="stat-label">Departments</div></div>
+    <div class="stat"><div class="stat-num">99<span>%</span></div><div class="stat-label">Uptime</div></div>
+  </div>
+</div>
+
+<div class="right">
+  <div class="login-card">
+    <div class="card-title">Welcome Back</div>
+    <div class="card-subtitle">Sign in to your account</div>
+
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="setRole('student',this)">🎓 Student</button>
+      <button class="role-tab" onclick="setRole('teacher',this)">👨‍🏫 Teacher</button>
+      <button class="role-tab" onclick="setRole('admin',this)">⚙️ Admin</button>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="input-group">
+      <label class="input-label">Email / Username</label>
+      <div class="input-wrap">
+        <span class="icon">✉️</span>
+        <input type="email" id="email" placeholder="student@college.edu" />
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Password</label>
+      <div class="input-wrap">
+        <span class="icon">🔑</span>
+        <input type="password" id="password" placeholder="••••••••••" />
+      </div>
+    </div>
+
+    <div class="remember-row">
+      <label class="remember-label">
+        <input type="checkbox" id="remember"> Remember me
+      </label>
+      <a href="#" class="forgot">Forgot password?</a>
+    </div>
+
+    <button class="btn-login" onclick="login()" id="login-btn">Sign In to Dashboard →</button>
+
+    <div class="divider"><span>or continue with</span></div>
+
+    <div class="sso-row">
+      <button class="btn-sso">🔍 Google SSO</button>
+      <button class="btn-sso">🐙 GitHub SSO</button>
+    </div>
+
+    <div class="demo-box">
+      <p>🚀 Quick Demo Login</p>
+      <div class="demo-item" onclick="fillDemo('student@college.edu','student123','student')">
+        <span>student@college.edu / student123</span>
+        <span class="fill-btn">Fill ↗</span>
+      </div>
+      <div class="demo-item" onclick="fillDemo('teacher@college.edu','teacher123','teacher')">
+        <span>teacher@college.edu / teacher123</span>
+        <span class="fill-btn">Fill ↗</span>
+      </div>
+      <div class="demo-item" onclick="fillDemo('admin@college.edu','admin123','admin')">
+        <span>admin@college.edu / admin123</span>
+        <span class="fill-btn">Fill ↗</span>
+      </div>
+    </div>
+
+    <div class="help-text">Need help? <a href="mailto:admin@college.edu">admin@college.edu</a></div>
+  </div>
+</div>
+
+<script>
+  let currentRole = 'student';
+
+  function setRole(role, btn) {
+    currentRole = role;
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    hideError();
+  }
+
+  function fillDemo(email, pass, role) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pass;
+    const tabs = document.querySelectorAll('.role-tab');
+    const map = { student: 0, teacher: 1, admin: 2 };
+    setRole(role, tabs[map[role]]);
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('error-msg').classList.remove('show');
+  }
+
+  async function login() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+    hideError();
+
+    if (!email || !password) return showError('Please enter email and password.');
+
+    btn.textContent = 'Signing in...';
+    btn.classList.add('loading');
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role: currentRole })
+      });
+      const data = await res.json();
+
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('name', data.name);
+        localStorage.setItem('studentId', data.studentId || '');
+        localStorage.setItem('userId', data.userId || '');
+        btn.textContent = '✓ Redirecting...';
+        if (data.role === 'student') location.href = '/student.html';
+        else if (data.role === 'teacher') location.href = '/teacher.html';
+        else location.href = '/admin.html';
+      } else {
+        showError(data.error || 'Login failed. Please try again.');
+        btn.textContent = 'Sign In to Dashboard →';
+        btn.classList.remove('loading');
+      }
+    } catch(e) {
+      showError('Cannot connect to server. Is it running? (node server.js)');
+      btn.textContent = 'Sign In to Dashboard →';
+      btn.classList.remove('loading');
+    }
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>

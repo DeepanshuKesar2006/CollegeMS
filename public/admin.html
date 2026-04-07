@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CollegeMS — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root { --navy:#0a1628; --blue:#1a56db; --accent:#38bdf8; --gold:#f59e0b; --green:#10b981; --red:#ef4444; --purple:#8b5cf6; --gray:#94a3b8; --sidebar-w:240px; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Sora',sans-serif; background:#f1f5f9; display:flex; min-height:100vh; }
+
+  .sidebar { width:var(--sidebar-w); background:var(--navy); min-height:100vh; position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column; z-index:100; box-shadow:4px 0 20px rgba(0,0,0,0.2); }
+  .sidebar-top { padding:24px 20px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .logo { display:flex; align-items:center; gap:10px; }
+  .logo-box { width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,var(--purple),var(--red)); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:white; }
+  .logo-text { font-size:18px; font-weight:700; color:white; }
+  .logo-text span { color:var(--purple); }
+  .user-card { margin:16px 20px; padding:14px; background:rgba(255,255,255,0.06); border-radius:12px; border:1px solid rgba(255,255,255,0.08); }
+  .user-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--red)); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:white; margin-bottom:10px; }
+  .user-name { font-size:14px; font-weight:600; color:white; }
+  .user-role { font-size:11px; color:#c4b5fd; font-family:'JetBrains Mono',monospace; }
+  .nav { flex:1; padding:10px 12px; }
+  .nav-section { font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:1.5px; padding:12px 8px 6px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin:2px 0; font-size:14px; color:rgba(255,255,255,0.6); transition:all 0.2s; }
+  .nav-item:hover { background:rgba(255,255,255,0.07); color:white; }
+  .nav-item.active { background:rgba(139,92,246,0.25); color:white; border-left:3px solid var(--purple); }
+  .logout-btn { margin:16px 12px; padding:11px; border-radius:10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#fca5a5; cursor:pointer; font-size:13px; font-family:'Sora',sans-serif; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .logout-btn:hover { background:rgba(239,68,68,0.2); }
+
+  .main { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; }
+  .topbar { background:white; padding:16px 32px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:50; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .topbar h2 { font-size:20px; font-weight:700; color:#1e293b; }
+  .topbar p { font-size:13px; color:var(--gray); }
+  .content { padding:28px 32px; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .stat-card { background:white; border-radius:16px; padding:22px; border:1px solid #e2e8f0; transition:all 0.3s; position:relative; overflow:hidden; }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.1); }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .sc-blue::before { background:linear-gradient(90deg,var(--blue),var(--accent)); }
+  .sc-green::before { background:linear-gradient(90deg,var(--green),#34d399); }
+  .sc-gold::before { background:linear-gradient(90deg,var(--gold),#fcd34d); }
+  .sc-purple::before { background:linear-gradient(90deg,var(--purple),#a78bfa); }
+  .stat-icon { font-size:28px; margin-bottom:10px; }
+  .stat-val { font-size:30px; font-weight:700; color:#1e293b; line-height:1; }
+  .stat-label { font-size:12px; color:var(--gray); margin-top:6px; }
+  .stat-sub { font-size:11px; color:#cbd5e1; margin-top:4px; }
+
+  .charts-row { display:grid; grid-template-columns:3fr 2fr; gap:20px; margin-bottom:24px; }
+  .card { background:white; border-radius:16px; padding:24px; border:1px solid #e2e8f0; margin-bottom:24px; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .card-title { font-size:15px; font-weight:700; color:#1e293b; }
+
+  .btn { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-family:'Sora',sans-serif; font-weight:500; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn:hover { transform:translateY(-1px); }
+  .btn-primary { background:var(--blue); color:white; }
+  .btn-gold { background:#f59e0b; color:white; }
+  .btn-gray { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+  .btn-red { background:var(--red); color:white; }
+  .btn-sm { padding:5px 10px; font-size:12px; }
+
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; padding:10px 14px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid #f1f5f9; background:#fafafa; }
+  td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #f8fafc; }
+  tr:hover td { background:#fafafa; }
+
+  .badge { padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-green { background:#dcfce7; color:#166534; }
+  .badge-red { background:#fee2e2; color:#991b1b; }
+  .badge-blue { background:#dbeafe; color:#1e40af; }
+  .badge-gold { background:#fef3c7; color:#92400e; }
+  .badge-purple { background:#f5f3ff; color:#5b21b6; }
+
+  .page-section { display:none; }
+  .page-section.active { display:block; }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:20px; padding:32px; width:480px; max-width:95vw; box-shadow:0 32px 80px rgba(0,0,0,0.3); }
+  .modal h3 { font-size:18px; font-weight:700; color:#1e293b; margin-bottom:24px; }
+  .form-group { margin-bottom:16px; }
+  .form-label { font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; display:block; }
+  .form-input { width:100%; padding:11px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:'Sora',sans-serif; outline:none; }
+  .form-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(26,86,219,0.1); }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+
+  .toast { position:fixed; bottom:24px; right:24px; padding:14px 20px; border-radius:12px; font-size:14px; font-weight:500; color:white; box-shadow:0 8px 32px rgba(0,0,0,0.2); z-index:999; animation:slideIn 0.3s ease; }
+  .toast.success { background:#10b981; }
+  .toast.error { background:#ef4444; }
+  @keyframes slideIn { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+  .search-input { padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:'Sora',sans-serif; outline:none; }
+  .search-input:focus { border-color:var(--blue); }
+
+  @media(max-width:1200px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .charts-row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo"><div class="logo-box">A</div><div class="logo-text">College<span>MS</span></div></div>
+  </div>
+  <div class="user-card">
+    <div class="user-avatar" id="a-avatar">A</div>
+    <div class="user-name" id="a-name">Admin</div>
+    <div class="user-role">⚙️ ADMIN PANEL</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Administration</div>
+    <div class="nav-item active" onclick="showSec('overview',this)"><span>🏠</span> Overview</div>
+    <div class="nav-item" onclick="showSec('teachers',this)"><span>👩‍🏫</span> Teachers</div>
+    <div class="nav-item" onclick="showSec('students',this)"><span>👨‍🎓</span> Students</div>
+    <div class="nav-item" onclick="showSec('subjects',this)"><span>📚</span> Subjects</div>
+    <div class="nav-item" onclick="showSec('reports',this)"><span>📊</span> Reports</div>
+    <div class="nav-item" onclick="showSec('users',this)"><span>👥</span> User Management</div>
+  </div>
+  <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><h2 id="page-title">Admin Dashboard</h2><p id="page-sub">College-wide overview</p></div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:13px;color:var(--gray);" id="a-clock"></div>
+      <div style="font-size:13px;padding:6px 12px;background:#f5f3ff;border-radius:8px;color:#5b21b6;font-weight:600;">Welcome, Admin</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="page-section active" id="sec-overview">
+      <div class="stats-grid">
+        <div class="stat-card sc-blue">
+          <div class="stat-icon">👨‍🎓</div>
+          <div class="stat-val" id="ov-students">—</div>
+          <div class="stat-label">Total Students</div>
+          <div class="stat-sub">This semester</div>
+        </div>
+        <div class="stat-card sc-gold">
+          <div class="stat-icon">👩‍🏫</div>
+          <div class="stat-val" id="ov-teachers">—</div>
+          <div class="stat-label">Total Teachers</div>
+          <div class="stat-sub">This semester</div>
+        </div>
+        <div class="stat-card sc-green">
+          <div class="stat-icon">📊</div>
+          <div class="stat-val">86.4%</div>
+          <div class="stat-label">Avg Attendance</div>
+          <div class="stat-sub">This semester</div>
+        </div>
+        <div class="stat-card sc-purple">
+          <div class="stat-icon">💰</div>
+          <div class="stat-val">₹2.4L</div>
+          <div class="stat-label">Fee Collected</div>
+          <div class="stat-sub">This semester</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div style="background:white;border-radius:16px;padding:24px;border:1px solid #e2e8f0;">
+          <div class="card-header"><div><div class="card-title">Dept-wise Attendance (%)</div></div></div>
+          <div style="position:relative;height:220px;"><canvas id="barChart"></canvas></div>
+        </div>
+        <div style="background:white;border-radius:16px;padding:24px;border:1px solid #e2e8f0;">
+          <div class="card-header"><div><div class="card-title">Student Distribution</div></div></div>
+          <div style="position:relative;height:220px;"><canvas id="pieChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Announcements</div>
+          <button class="btn btn-primary btn-sm" onclick="showSec('teachers',document.querySelectorAll('.nav-item')[1])">Manage →</button>
+        </div>
+        <div id="ov-ann"></div>
+      </div>
+    </div>
+
+    <!-- TEACHERS -->
+    <div class="page-section" id="sec-teachers">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Teacher Management</div>
+          <button class="btn btn-primary" onclick="openTeacherModal()">+ Add Teacher</button>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          <input class="search-input" id="teacher-search" placeholder="🔍 Search teachers..." oninput="filterTeachers()" style="flex:1">
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Section</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="teachers-tbody">
+            <tr><td><b>Ms. Priya Sharma</b></td><td>priya@college.edu</td><td>Mathematics</td><td>CSE-A</td><td>47</td><td><span class="badge badge-green">Active</span></td><td style="display:flex;gap:4px"><button class="btn btn-gold btn-sm">✏️ Edit</button><button class="btn btn-gray btn-sm">👁️ View</button></td></tr>
+            <tr><td><b>Mr. Rahul Verma</b></td><td>rahul@college.edu</td><td>Physics</td><td>ECE-B</td><td>52</td><td><span class="badge badge-green">Active</span></td><td style="display:flex;gap:4px"><button class="btn btn-gold btn-sm">✏️ Edit</button><button class="btn btn-gray btn-sm">👁️ View</button></td></tr>
+            <tr><td><b>Dr. Anjali Gupta</b></td><td>anjali@college.edu</td><td>DSA</td><td>ECE-B</td><td>45</td><td><span class="badge badge-green">Active</span></td><td style="display:flex;gap:4px"><button class="btn btn-gold btn-sm">✏️ Edit</button><button class="btn btn-gray btn-sm">👁️ View</button></td></tr>
+            <tr><td><b>Mr. Sanjay Mehta</b></td><td>sanjay@college.edu</td><td>DBMS</td><td>IT-A</td><td>38</td><td><span class="badge badge-gold">On Leave</span></td><td style="display:flex;gap:4px"><button class="btn btn-gold btn-sm">✏️ Edit</button><button class="btn btn-gray btn-sm">👁️ View</button></td></tr>
+            <tr><td><b>Ms. Kavya Rao</b></td><td>kavya@college.edu</td><td>English</td><td>All</td><td>120</td><td><span class="badge badge-green">Active</span></td><td style="display:flex;gap:4px"><button class="btn btn-gold btn-sm">✏️ Edit</button><button class="btn btn-gray btn-sm">👁️ View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STUDENTS (admin view) -->
+    <div class="page-section" id="sec-students">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">All Students</div>
+          <div style="display:flex;gap:8px;">
+            <input class="search-input" id="admin-student-search" placeholder="🔍 Search..." oninput="filterAdminStudents()" style="width:220px">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Roll No</th><th>Dept</th><th>CGPA</th><th>Status</th></tr></thead>
+          <tbody id="admin-students-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUBJECTS -->
+    <div class="page-section" id="sec-subjects">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Subject & Timetable Management</div><button class="btn btn-primary">+ Add Subject</button></div>
+        <table>
+          <thead><tr><th>Subject</th><th>Code</th><th>Credits</th><th>Teacher</th><th>Department</th><th>Students</th></tr></thead>
+          <tbody>
+            <tr><td><b>Mathematics</b></td><td style="font-family:'JetBrains Mono',monospace">MATH101</td><td>4</td><td>Ms. Priya Sharma</td><td><span class="badge badge-blue">CSE</span></td><td>47</td></tr>
+            <tr><td><b>Physics</b></td><td style="font-family:'JetBrains Mono',monospace">PHY101</td><td>3</td><td>Mr. Rahul Verma</td><td><span class="badge badge-gold">ECE</span></td><td>52</td></tr>
+            <tr><td><b>Data Structures & Algorithms</b></td><td style="font-family:'JetBrains Mono',monospace">CSE201</td><td>4</td><td>Dr. Anjali Gupta</td><td><span class="badge badge-blue">CSE</span></td><td>45</td></tr>
+            <tr><td><b>English Communication</b></td><td style="font-family:'JetBrains Mono',monospace">ENG101</td><td>2</td><td>Ms. Kavya Rao</td><td><span class="badge badge-green">All</span></td><td>120</td></tr>
+            <tr><td><b>Database Management Systems</b></td><td style="font-family:'JetBrains Mono',monospace">CSE301</td><td>4</td><td>Mr. Sanjay Mehta</td><td><span class="badge badge-purple">IT</span></td><td>38</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page-section" id="sec-reports">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div style="background:white;border-radius:16px;padding:24px;border:1px solid #e2e8f0;">
+          <div class="card-title" style="margin-bottom:16px">Attendance Trend</div>
+          <div style="position:relative;height:200px;"><canvas id="lineChart"></canvas></div>
+        </div>
+        <div style="background:white;border-radius:16px;padding:24px;border:1px solid #e2e8f0;">
+          <div class="card-title" style="margin-bottom:16px">Grade Distribution</div>
+          <div style="position:relative;height:200px;"><canvas id="gradeChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Fee Collection Report</div>
+        <table>
+          <thead><tr><th>Department</th><th>Total Students</th><th>Paid</th><th>Pending</th><th>Amount Collected</th><th>Completion</th></tr></thead>
+          <tbody>
+            <tr><td><b>CSE</b></td><td>420</td><td>380</td><td>40</td><td>₹76,000</td><td><div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:90%;background:#10b981;border-radius:3px"></div></div></td></tr>
+            <tr><td><b>ECE</b></td><td>280</td><td>240</td><td>40</td><td>₹48,000</td><td><div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:86%;background:#10b981;border-radius:3px"></div></div></td></tr>
+            <tr><td><b>Mech</b></td><td>180</td><td>150</td><td>30</td><td>₹30,000</td><td><div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:83%;background:#f59e0b;border-radius:3px"></div></div></td></tr>
+            <tr><td><b>IT</b></td><td>200</td><td>185</td><td>15</td><td>₹37,000</td><td><div style="height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden"><div style="height:100%;width:93%;background:#10b981;border-radius:3px"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USER MANAGEMENT -->
+    <div class="page-section" id="sec-users">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">User Management (All Roles)</div>
+          <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD TEACHER MODAL -->
+<div class="modal-overlay" id="teacher-modal">
+  <div class="modal">
+    <h3>Add Teacher</h3>
+    <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="t-name-inp" placeholder="Teacher full name"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="t-email-inp" placeholder="teacher@college.edu"></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="t-pass-inp" value="teacher123"></div>
+    <div class="form-group"><label class="form-label">Subject</label><input class="form-input" id="t-subject-inp" placeholder="Mathematics"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="document.getElementById('teacher-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="addTeacher()">Add Teacher</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <h3>Add User</h3>
+    <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="u-name" placeholder="Full name"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="u-email" placeholder="user@college.edu"></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="u-pass" value="password123"></div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-input" id="u-role"><option>student</option><option>teacher</option><option>admin</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="document.getElementById('user-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="addUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const name = localStorage.getItem('name') || 'Admin';
+const token = localStorage.getItem('token');
+if (!token || localStorage.getItem('role') !== 'admin') location.href = '/';
+
+document.getElementById('a-name').textContent = name;
+document.getElementById('a-avatar').textContent = name.charAt(0);
+setInterval(() => { document.getElementById('a-clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }, 1000);
+
+let allUsers = [], allAdminStudents = [];
+
+function toast(msg, type='success') {
+  const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+}
+
+function showSec(sname, el) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + sname).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = { overview:'Admin Dashboard', teachers:'Teacher Management', students:'Student Records', subjects:'Subjects & Timetable', reports:'Reports & Analytics', users:'User Management' };
+  document.getElementById('page-title').textContent = titles[sname] || sname;
+  if (sname === 'users') loadUsers();
+  if (sname === 'students') loadAdminStudents();
+  if (sname === 'reports') renderReportCharts();
+}
+
+async function loadOverview() {
+  const [studRes, userRes, annRes] = await Promise.all([
+    fetch('/api/students'), fetch('/api/users'), fetch('/api/announcements')
+  ]);
+  const students = await studRes.json();
+  const users = await userRes.json();
+  const ann = await annRes.json() || [];
+  allUsers = users || [];
+  allAdminStudents = students || [];
+
+  document.getElementById('ov-students').textContent = (students || []).length;
+  document.getElementById('ov-teachers').textContent = (users || []).filter(u => u.role === 'teacher').length;
+
+  // Announcement overview
+  document.getElementById('ov-ann').innerHTML = ann.slice(0,3).map(a =>
+    `<div style="padding:12px;border-left:3px solid var(--blue);background:#f8fafc;border-radius:0 8px 8px 0;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:#1e293b">${a.title}</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:3px">${a.message}</div>
+    </div>`).join('') || '<p style="color:#94a3b8;text-align:center;padding:20px">No announcements</p>';
+
+  // Charts
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ['CSE','ECE','Mech','Civil','IT','MBA'],
+      datasets: [{ label: 'Attendance %', data: [88,76,91,82,95,78],
+        backgroundColor: ['#1a56db','#8b5cf6','#10b981','#f59e0b','#06b6d4','#ef4444'],
+        borderRadius: 8, borderSkipped: false }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ y:{min:60,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v+'%'}}, x:{grid:{display:false}} } }
+  });
+
+  new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['CSE 42%','ECE 28%','Mech 18%','Others 12%'],
+      datasets: [{ data: [42,28,18,12], backgroundColor: ['#1a56db','#8b5cf6','#10b981','#f59e0b'], borderWidth: 0 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{font:{size:11}} } } }
+  });
+}
+
+function renderReportCharts() {
+  const c1 = document.getElementById('lineChart');
+  const c2 = document.getElementById('gradeChart');
+  if (c1._chartInstance) { c1._chartInstance.destroy(); }
+  if (c2._chartInstance) { c2._chartInstance.destroy(); }
+
+  const lc = new Chart(c1, {
+    type: 'line',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+      datasets: [{
+        label: 'Avg Attendance %',
+        data: [82,85,88,84,90,86],
+        borderColor: '#1a56db', backgroundColor: 'rgba(26,86,219,0.1)',
+        fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#1a56db'
+      }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{min:70,max:100} } }
+  });
+  c1._chartInstance = lc;
+
+  const gc = new Chart(c2, {
+    type: 'bar',
+    data: {
+      labels: ['A+','A','B+','B','C','D','F'],
+      datasets: [{ label: 'Students', data: [45,78,92,64,38,22,11],
+        backgroundColor: ['#10b981','#34d399','#60a5fa','#93c5fd','#fcd34d','#fb923c','#ef4444'],
+        borderRadius: 6 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false}} } }
+  });
+  c2._chartInstance = gc;
+}
+
+async function loadUsers() {
+  const res = await fetch('/api/users');
+  allUsers = await res.json() || [];
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = allUsers.map(u => `
+    <tr>
+      <td><b>${u.name}</b></td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${u.email}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-purple':u.role==='teacher'?'badge-gold':'badge-blue'}">${u.role}</span></td>
+      <td><button class="btn btn-red btn-sm" onclick="deleteUser(${u.id},'${u.role}')">🗑️ Delete</button></td>
+    </tr>`).join('');
+}
+
+async function loadAdminStudents() {
+  const res = await fetch('/api/students');
+  allAdminStudents = await res.json() || [];
+  renderAdminStudents(allAdminStudents);
+}
+
+function renderAdminStudents(list) {
+  document.getElementById('admin-students-tbody').innerHTML = list.map((s,i) => `
+    <tr><td>${i+1}</td><td><b>${s.users ? s.users.name : '—'}</b></td>
+    <td style="font-size:12px;font-family:'JetBrains Mono',monospace">${s.users ? s.users.email : '—'}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${s.roll_no}</td>
+    <td><span class="badge badge-blue">${s.department}</span></td>
+    <td><b>${s.cgpa}</b></td>
+    <td><span class="badge ${s.status==='Active'?'badge-green':'badge-gold'}">${s.status}</span></td></tr>`
+  ).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8">No students found</td></tr>';
+}
+
+function filterAdminStudents() {
+  const q = document.getElementById('admin-student-search').value.toLowerCase();
+  renderAdminStudents(allAdminStudents.filter(s =>
+    (s.users && s.users.name.toLowerCase().includes(q)) || s.roll_no.toLowerCase().includes(q)
+  ));
+}
+
+function filterTeachers() {
+  const q = document.getElementById('teacher-search').value.toLowerCase();
+  // Static data for teachers in demo
+}
+
+function openTeacherModal() { document.getElementById('teacher-modal').classList.add('open'); }
+function openAddUserModal() { document.getElementById('user-modal').classList.add('open'); }
+
+async function addTeacher() {
+  const name = document.getElementById('t-name-inp').value;
+  const email = document.getElementById('t-email-inp').value;
+  const password = document.getElementById('t-pass-inp').value;
+  if (!name || !email) return toast('Name and email required', 'error');
+  await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name, email, password, role: 'teacher' }) });
+  toast('Teacher added!');
+  document.getElementById('teacher-modal').classList.remove('open');
+}
+
+async function addUser() {
+  const name = document.getElementById('u-name').value;
+  const email = document.getElementById('u-email').value;
+  const password = document.getElementById('u-pass').value;
+  const role = document.getElementById('u-role').value;
+  if (!name || !email) return toast('Fill all fields', 'error');
+  await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name, email, password, role }) });
+  toast('User added!');
+  document.getElementById('user-modal').classList.remove('open');
+  loadUsers();
+}
+
+async function deleteUser(id, role) {
+  if (!confirm(`Delete this ${role}?`)) return;
+  await fetch('/api/users/' + id, { method:'DELETE' });
+  toast('User deleted'); loadUsers();
+}
+
+function logout() { localStorage.clear(); location.href = '/'; }
+
+loadOverview();
+</script>
+</body>
+</html>

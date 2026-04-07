@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CollegeMS — Teacher Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --navy:#0a1628; --navy2:#0f2044; --blue:#1a56db; --accent:#38bdf8; --gold:#f59e0b; --green:#10b981; --red:#ef4444; --purple:#8b5cf6; --gray:#94a3b8; --sidebar-w:240px; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Sora',sans-serif; background:#f1f5f9; display:flex; min-height:100vh; }
+
+  .sidebar { width:var(--sidebar-w); background:var(--navy); min-height:100vh; position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column; z-index:100; box-shadow:4px 0 20px rgba(0,0,0,0.2); }
+  .sidebar-top { padding:24px 20px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .logo { display:flex; align-items:center; gap:10px; }
+  .logo-box { width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#ef4444); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:white; }
+  .logo-text { font-size:18px; font-weight:700; color:white; }
+  .logo-text span { color:#f59e0b; }
+  .user-card { margin:16px 20px; padding:14px; background:rgba(255,255,255,0.06); border-radius:12px; border:1px solid rgba(255,255,255,0.08); }
+  .user-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#f59e0b,#ef4444); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:white; margin-bottom:10px; }
+  .user-name { font-size:14px; font-weight:600; color:white; }
+  .user-role { font-size:11px; color:#f59e0b; font-family:'JetBrains Mono',monospace; }
+  .nav { flex:1; padding:10px 12px; }
+  .nav-section { font-size:10px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:1.5px; padding:12px 8px 6px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin:2px 0; font-size:14px; color:rgba(255,255,255,0.6); transition:all 0.2s; }
+  .nav-item:hover { background:rgba(255,255,255,0.07); color:white; }
+  .nav-item.active { background:rgba(245,158,11,0.2); color:white; border-left:3px solid #f59e0b; }
+  .icon { font-size:16px; width:20px; text-align:center; }
+  .logout-btn { margin:16px 12px; padding:11px; border-radius:10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#fca5a5; cursor:pointer; font-size:13px; font-family:'Sora',sans-serif; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .logout-btn:hover { background:rgba(239,68,68,0.2); }
+
+  .main { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; }
+  .topbar { background:white; padding:16px 32px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:50; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .topbar h2 { font-size:20px; font-weight:700; color:#1e293b; }
+  .topbar p { font-size:13px; color:var(--gray); }
+  .content { padding:28px 32px; }
+
+  .card { background:white; border-radius:16px; padding:24px; border:1px solid #e2e8f0; margin-bottom:24px; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+  .card-title { font-size:15px; font-weight:700; color:#1e293b; }
+
+  /* Stat pills */
+  .stat-pills { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .stat-pill { padding:12px 20px; border-radius:12px; display:flex; align-items:center; gap:10px; border:1px solid; }
+  .sp-blue { background:#eff6ff; border-color:#bfdbfe; }
+  .sp-green { background:#f0fdf4; border-color:#bbf7d0; }
+  .sp-gold { background:#fffbeb; border-color:#fde68a; }
+  .sp-purple { background:#f5f3ff; border-color:#ddd6fe; }
+  .sp-num { font-size:22px; font-weight:700; }
+  .sp-label { font-size:12px; color:var(--gray); }
+
+  /* Buttons */
+  .btn { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-family:'Sora',sans-serif; font-weight:500; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn:hover { transform:translateY(-1px); }
+  .btn-primary { background:var(--blue); color:white; }
+  .btn-primary:hover { background:#1e40af; }
+  .btn-gold { background:#f59e0b; color:white; }
+  .btn-green { background:var(--green); color:white; }
+  .btn-red { background:var(--red); color:white; }
+  .btn-gray { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+  .btn-sm { padding:5px 10px; font-size:12px; }
+
+  /* Search bar */
+  .search-row { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .search-input { flex:1; min-width:200px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:'Sora',sans-serif; outline:none; }
+  .search-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(26,86,219,0.1); }
+  select.search-input { cursor:pointer; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; padding:10px 14px; font-size:11px; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid #f1f5f9; background:#fafafa; }
+  td { padding:11px 14px; font-size:13px; color:#374151; border-bottom:1px solid #f8fafc; }
+  tr:hover td { background:#fafafa; }
+
+  .badge { padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-green { background:#dcfce7; color:#166534; }
+  .badge-red { background:#fee2e2; color:#991b1b; }
+  .badge-blue { background:#dbeafe; color:#1e40af; }
+  .badge-gold { background:#fef3c7; color:#92400e; }
+  .badge-gray { background:#f1f5f9; color:#475569; }
+
+  /* Attendance toggles */
+  .att-toggle { display:flex; gap:4px; }
+  .att-btn { width:30px; height:26px; border-radius:6px; border:1px solid #e2e8f0; cursor:pointer; font-size:11px; font-weight:700; background:white; color:#94a3b8; transition:all 0.15s; }
+  .att-btn:hover { opacity:0.8; }
+  .att-btn.P { background:#10b981; color:white; border-color:#10b981; }
+  .att-btn.A { background:#ef4444; color:white; border-color:#ef4444; }
+  .att-btn.L { background:#f59e0b; color:white; border-color:#f59e0b; }
+
+  /* Summary strip for attendance */
+  .att-summary { display:flex; gap:16px; padding:14px; background:#f8fafc; border-radius:10px; margin-bottom:16px; }
+  .att-sum-item { text-align:center; }
+  .att-sum-num { font-size:22px; font-weight:700; }
+  .att-sum-label { font-size:11px; color:var(--gray); }
+
+  /* Result marks input */
+  .marks-input { width:80px; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; font-family:'Sora',sans-serif; text-align:center; outline:none; }
+  .marks-input:focus { border-color:var(--blue); }
+
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:20px; padding:32px; width:480px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 32px 80px rgba(0,0,0,0.3); }
+  .modal h3 { font-size:18px; font-weight:700; color:#1e293b; margin-bottom:24px; }
+  .form-group { margin-bottom:16px; }
+  .form-label { font-size:12px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; display:block; }
+  .form-input { width:100%; padding:11px 14px; border:1px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:'Sora',sans-serif; outline:none; }
+  .form-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(26,86,219,0.1); }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+
+  .page-section { display:none; }
+  .page-section.active { display:block; }
+
+  .toast { position:fixed; bottom:24px; right:24px; padding:14px 20px; border-radius:12px; font-size:14px; font-weight:500; color:white; box-shadow:0 8px 32px rgba(0,0,0,0.2); z-index:999; animation:slideIn 0.3s ease; }
+  .toast.success { background:#10b981; }
+  .toast.error { background:#ef4444; }
+  @keyframes slideIn { from{transform:translateX(100px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-top">
+    <div class="logo"><div class="logo-box">T</div><div class="logo-text">College<span>MS</span></div></div>
+  </div>
+  <div class="user-card">
+    <div class="user-avatar" id="t-avatar">T</div>
+    <div class="user-name" id="t-name">Teacher</div>
+    <div class="user-role">👨‍🏫 TEACHER PORTAL</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Teacher Tools</div>
+    <div class="nav-item active" onclick="showSec('students',this)"><span class="icon">👨‍🎓</span> Students</div>
+    <div class="nav-item" onclick="showSec('attendance',this)"><span class="icon">📋</span> Mark Attendance</div>
+    <div class="nav-item" onclick="showSec('results',this)"><span class="icon">📝</span> Upload Results</div>
+    <div class="nav-item" onclick="showSec('announcements',this)"><span class="icon">📢</span> Announcements</div>
+    <div class="nav-item" onclick="showSec('summary',this)"><span class="icon">📊</span> Class Summary</div>
+  </div>
+  <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><h2 id="page-title">Student Management</h2><p id="page-sub">Manage all student records</p></div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:13px;color:var(--gray);font-family:'JetBrains Mono',monospace;" id="clock2"></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STUDENTS SECTION -->
+    <div class="page-section active" id="sec-students">
+      <div class="stat-pills" id="student-stats">
+        <div class="stat-pill sp-blue"><div><div class="sp-num" id="total-students">0</div><div class="sp-label">Total Students</div></div></div>
+        <div class="stat-pill sp-green"><div><div class="sp-num" id="avg-att">—</div><div class="sp-label">Avg Attendance</div></div></div>
+        <div class="stat-pill sp-gold"><div><div class="sp-num">3</div><div class="sp-label">Subjects Assigned</div></div></div>
+        <div class="stat-pill sp-purple"><div><div class="sp-num">2</div><div class="sp-label">Upcoming Exams</div></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Student Management</div>
+          <button class="btn btn-primary" onclick="openAddModal()">+ Add Student</button>
+        </div>
+        <div class="search-row">
+          <input class="search-input" id="student-search" placeholder="🔍 Search by name or roll no..." oninput="filterStudents()">
+          <select class="search-input" style="width:160px" id="dept-filter" onchange="filterStudents()">
+            <option value="">All Departments</option>
+            <option>CSE</option><option>ECE</option><option>Mech</option><option>Civil</option><option>IT</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Roll No</th><th>Dept</th><th>Att%</th><th>CGPA</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="students-tbody"></tbody>
+        </table>
+        <!-- Pagination -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:13px;color:var(--gray);">
+          <span id="pagination-info"></span>
+          <div style="display:flex;gap:6px;" id="pagination-btns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE SECTION -->
+    <div class="page-section" id="sec-attendance">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Mark Attendance</div></div>
+        <div class="search-row">
+          <select class="search-input" id="att-subject" style="width:200px">
+            <option>Mathematics</option><option>Physics</option><option>DSA</option>
+            <option>English</option><option>CS Fundamentals</option><option>DBMS</option>
+          </select>
+          <input type="date" class="search-input" id="att-date" style="width:160px">
+          <select class="search-input" id="att-section" style="width:140px">
+            <option>Section A</option><option>Section B</option><option>Section C</option>
+          </select>
+          <button class="btn btn-primary" onclick="loadAttTable()">Load Students</button>
+          <button class="btn btn-green" onclick="markAll('P')">✓ Mark All Present</button>
+        </div>
+        <div class="att-summary" id="att-summary" style="display:none">
+          <div class="att-sum-item"><div class="att-sum-num" style="color:#10b981" id="cnt-P">0</div><div class="att-sum-label">Present</div></div>
+          <div class="att-sum-item"><div class="att-sum-num" style="color:#ef4444" id="cnt-A">0</div><div class="att-sum-label">Absent</div></div>
+          <div class="att-sum-item"><div class="att-sum-num" style="color:#f59e0b" id="cnt-L">0</div><div class="att-sum-label">Late/Leave</div></div>
+          <div class="att-sum-item"><div class="att-sum-num" style="color:#1a56db" id="cnt-Total">0</div><div class="att-sum-label">Total</div></div>
+        </div>
+        <table id="att-table" style="display:none">
+          <thead><tr><th>#</th><th>Roll No</th><th>Student Name</th><th>Previous Att%</th><th>Today</th><th>Reason</th></tr></thead>
+          <tbody id="att-tbody"></tbody>
+        </table>
+        <div id="att-actions" style="display:none;margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn btn-gray" onclick="saveDraft()">Save Draft</button>
+          <button class="btn btn-primary" onclick="submitAttendance()">Submit Attendance ✓</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS SECTION -->
+    <div class="page-section" id="sec-results">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Upload Results</div></div>
+        <div class="search-row">
+          <select class="search-input" id="res-subject" style="width:200px">
+            <option>Mathematics</option><option>Physics</option><option>DSA</option>
+            <option>English</option><option>CS Fundamentals</option><option>DBMS</option>
+          </select>
+          <select class="search-input" id="res-examtype" style="width:160px">
+            <option>Mid Term</option><option>End Term</option><option>Quiz 1</option><option>Quiz 2</option><option>Practical</option>
+          </select>
+          <input type="number" class="search-input" id="res-maxmarks" placeholder="Max Marks" value="100" style="width:120px">
+          <input type="number" class="search-input" id="res-passmarks" placeholder="Pass Marks" value="40" style="width:120px">
+          <button class="btn btn-primary" onclick="loadResultsTable()">Load Students</button>
+        </div>
+        <div id="res-stats" style="display:none" class="stat-pills" style="margin-bottom:16px">
+          <div class="stat-pill sp-blue"><div><div class="sp-num" id="res-total">0</div><div class="sp-label">Students</div></div></div>
+          <div class="stat-pill sp-green"><div><div class="sp-num" id="res-avg">—</div><div class="sp-label">Class Avg</div></div></div>
+          <div class="stat-pill sp-gold"><div><div class="sp-num" id="res-highest">—</div><div class="sp-label">Highest</div></div></div>
+          <div class="stat-pill sp-purple"><div><div class="sp-num" id="res-lowest">—</div><div class="sp-label">Lowest</div></div></div>
+        </div>
+        <table id="res-table" style="display:none">
+          <thead><tr><th>#</th><th>Roll No</th><th>Student Name</th><th>Marks Obtained</th><th>Grade</th><th>Result</th><th>Remarks</th></tr></thead>
+          <tbody id="res-tbody"></tbody>
+        </table>
+        <div id="res-actions" style="display:none;margin-top:16px;text-align:right">
+          <button class="btn btn-primary" onclick="publishResults()">Publish Results 🚀</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS SECTION -->
+    <div class="page-section" id="sec-announcements">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">Post Announcement</div>
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input class="form-input" id="ann-title" placeholder="Announcement title...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-input" id="ann-msg" rows="5" placeholder="Write your announcement..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target</label>
+            <select class="form-input" id="ann-target">
+              <option>All Students</option><option>CSE Only</option><option>ECE Only</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="postAnn()">📢 Post Announcement</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:20px">Previous Announcements</div>
+          <div id="ann-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLASS SUMMARY SECTION -->
+    <div class="page-section" id="sec-summary">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:20px">Class Summary</div>
+        <div id="summary-content">
+          <div class="stat-pills">
+            <div class="stat-pill sp-blue"><div><div class="sp-num" id="sum-total">0</div><div class="sp-label">Total Students</div></div></div>
+            <div class="stat-pill sp-green"><div><div class="sp-num" id="sum-att">—</div><div class="sp-label">Avg Attendance</div></div></div>
+            <div class="stat-pill sp-gold"><div><div class="sp-num" id="sum-cgpa">—</div><div class="sp-label">Avg CGPA</div></div></div>
+          </div>
+          <table style="margin-top:20px">
+            <thead><tr><th>Name</th><th>Roll No</th><th>Dept</th><th>CGPA</th><th>Status</th></tr></thead>
+            <tbody id="summary-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD/EDIT STUDENT MODAL -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal">
+    <h3 id="modal-title">Add Student</h3>
+    <input type="hidden" id="edit-student-id">
+    <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="s-name" placeholder="Student full name"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="s-email" placeholder="student@college.edu"></div>
+    <div class="form-group"><label class="form-label">Password (for new student)</label><input class="form-input" type="password" id="s-pass" placeholder="Default: student123"></div>
+    <div class="form-group"><label class="form-label">Roll Number</label><input class="form-input" id="s-roll" placeholder="22CS001"></div>
+    <div class="form-group">
+      <label class="form-label">Department</label>
+      <select class="form-input" id="s-dept"><option>CSE</option><option>ECE</option><option>Mech</option><option>Civil</option><option>IT</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">CGPA</label><input class="form-input" type="number" id="s-cgpa" placeholder="8.5" step="0.1" min="0" max="10"></div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-input" id="s-status"><option>Active</option><option>Inactive</option><option>On Leave</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gray" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const name = localStorage.getItem('name') || 'Teacher';
+const token = localStorage.getItem('token');
+if (!token || localStorage.getItem('role') !== 'teacher') location.href = '/';
+
+document.getElementById('t-name').textContent = name;
+document.getElementById('t-avatar').textContent = name.charAt(0);
+document.getElementById('att-date').value = new Date().toISOString().split('T')[0];
+
+setInterval(() => {
+  document.getElementById('clock2').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
+
+let allStudents = [];
+let currentPage = 1;
+const perPage = 8;
+
+// Navigation
+function showSec(name, el) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  el.classList.add('active');
+  const titles = { students:'Student Management', attendance:'Mark Attendance', results:'Upload Results', announcements:'Announcements', summary:'Class Summary' };
+  document.getElementById('page-title').textContent = titles[name];
+  if (name === 'announcements') loadAnnouncements();
+  if (name === 'summary') renderSummary();
+}
+
+// Toast
+function toast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// Load students
+async function loadStudents() {
+  const res = await fetch('/api/students');
+  allStudents = await res.json() || [];
+  document.getElementById('total-students').textContent = allStudents.length;
+  const avgCgpa = allStudents.length ? (allStudents.reduce((a,s) => a + (parseFloat(s.cgpa)||0), 0) / allStudents.length).toFixed(1) : 0;
+  document.getElementById('avg-att').textContent = avgCgpa;
+  renderStudents(allStudents);
+}
+
+function renderStudents(list) {
+  const start = (currentPage - 1) * perPage;
+  const page = list.slice(start, start + perPage);
+  const tbody = document.getElementById('students-tbody');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8">No students found. Click "+ Add Student" to add one.</td></tr>';
+  } else {
+    tbody.innerHTML = page.map((s, i) => `
+      <tr>
+        <td>${start + i + 1}</td>
+        <td><b>${s.users ? s.users.name : '—'}</b></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${s.roll_no}</td>
+        <td><span class="badge badge-blue">${s.department}</span></td>
+        <td>${Math.floor(Math.random()*20+75)}%</td>
+        <td><b>${s.cgpa}</b></td>
+        <td><span class="badge ${s.status==='Active'?'badge-green':s.status==='Inactive'?'badge-red':'badge-gold'}">${s.status}</span></td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-gold btn-sm" onclick="openEditModal(${s.id})">✏️ Edit</button>
+          <button class="btn btn-red btn-sm" onclick="deleteStudent(${s.id})">🗑️</button>
+        </td>
+      </tr>`).join('');
+  }
+  document.getElementById('pagination-info').textContent = `Showing ${Math.min(start+1, list.length)}–${Math.min(start+perPage, list.length)} of ${list.length}`;
+  const pBtns = document.getElementById('pagination-btns');
+  const totalPages = Math.ceil(list.length / perPage);
+  pBtns.innerHTML = Array.from({length:totalPages}, (_,i) =>
+    `<button class="btn ${i+1===currentPage?'btn-primary':'btn-gray'} btn-sm" onclick="goPage(${i+1})">${i+1}</button>`
+  ).join('');
+}
+
+function goPage(p) { currentPage = p; filterStudents(); }
+
+function filterStudents() {
+  currentPage = 1;
+  const q = document.getElementById('student-search').value.toLowerCase();
+  const dept = document.getElementById('dept-filter').value;
+  const filtered = allStudents.filter(s => {
+    const name = s.users ? s.users.name.toLowerCase() : '';
+    const roll = s.roll_no.toLowerCase();
+    const matchQ = !q || name.includes(q) || roll.includes(q);
+    const matchD = !dept || s.department === dept;
+    return matchQ && matchD;
+  });
+  renderStudents(filtered);
+}
+
+// Modal
+function openAddModal() {
+  document.getElementById('modal-title').textContent = 'Add New Student';
+  ['s-name','s-email','s-pass','s-roll','s-cgpa'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('edit-student-id').value = '';
+  document.getElementById('student-modal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const s = allStudents.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modal-title').textContent = 'Edit Student';
+  document.getElementById('edit-student-id').value = id;
+  document.getElementById('s-name').value = s.users ? s.users.name : '';
+  document.getElementById('s-email').value = s.users ? s.users.email : '';
+  document.getElementById('s-roll').value = s.roll_no;
+  document.getElementById('s-dept').value = s.department;
+  document.getElementById('s-cgpa').value = s.cgpa;
+  document.getElementById('s-status').value = s.status;
+  document.getElementById('student-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('student-modal').classList.remove('open'); }
+
+async function saveStudent() {
+  const editId = document.getElementById('edit-student-id').value;
+  const body = {
+    name: document.getElementById('s-name').value,
+    email: document.getElementById('s-email').value,
+    password: document.getElementById('s-pass').value || 'student123',
+    roll_no: document.getElementById('s-roll').value,
+    department: document.getElementById('s-dept').value,
+    cgpa: document.getElementById('s-cgpa').value,
+    status: document.getElementById('s-status').value,
+  };
+  if (!body.roll_no || !body.name) return toast('Please fill Name and Roll No', 'error');
+  try {
+    if (editId) {
+      await fetch('/api/students/' + editId, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      toast('Student updated!');
+    } else {
+      if (!body.email) return toast('Email required for new student', 'error');
+      await fetch('/api/students', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      toast('Student added!');
+    }
+    closeModal(); loadStudents();
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+}
+
+async function deleteStudent(id) {
+  if (!confirm('Delete this student? This will also delete their attendance and results.')) return;
+  await fetch('/api/students/' + id, { method:'DELETE' });
+  toast('Student deleted.'); loadStudents();
+}
+
+// Attendance
+function loadAttTable() {
+  if (allStudents.length === 0) { toast('No students loaded yet', 'error'); return; }
+  document.getElementById('att-table').style.display = 'table';
+  document.getElementById('att-summary').style.display = 'flex';
+  document.getElementById('att-actions').style.display = 'flex';
+  const tbody = document.getElementById('att-tbody');
+  tbody.innerHTML = allStudents.map((s, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${s.roll_no}</td>
+      <td><b>${s.users ? s.users.name : '—'}</b></td>
+      <td>${Math.floor(Math.random()*20+70)}%</td>
+      <td>
+        <div class="att-toggle">
+          <button class="att-btn P" id="ab-${s.id}-P" onclick="toggleAtt(${s.id},'P')">P</button>
+          <button class="att-btn" id="ab-${s.id}-A" onclick="toggleAtt(${s.id},'A')">A</button>
+          <button class="att-btn" id="ab-${s.id}-L" onclick="toggleAtt(${s.id},'L')">L</button>
+        </div>
+      </td>
+      <td><input type="text" class="form-input" id="ar-${s.id}" placeholder="Reason..." style="padding:6px;font-size:12px"></td>
+    </tr>`).join('');
+  updateAttSummary();
+}
+
+function toggleAtt(id, status) {
+  ['P','A','L'].forEach(s => {
+    const b = document.getElementById(`ab-${id}-${s}`);
+    if (b) { b.className = 'att-btn'; if (s === status) b.className = `att-btn ${s}`; }
+  });
+  updateAttSummary();
+}
+
+function updateAttSummary() {
+  let P=0,A=0,L=0;
+  allStudents.forEach(s => {
+    if (document.getElementById(`ab-${s.id}-P`)?.classList.contains('P')) P++;
+    else if (document.getElementById(`ab-${s.id}-A`)?.classList.contains('A')) A++;
+    else if (document.getElementById(`ab-${s.id}-L`)?.classList.contains('L')) L++;
+  });
+  document.getElementById('cnt-P').textContent = P;
+  document.getElementById('cnt-A').textContent = A;
+  document.getElementById('cnt-L').textContent = L;
+  document.getElementById('cnt-Total').textContent = allStudents.length;
+}
+
+function markAll(status) { allStudents.forEach(s => toggleAtt(s.id, status)); }
+
+async function submitAttendance() {
+  const subject = document.getElementById('att-subject').value;
+  const date = document.getElementById('att-date').value;
+  const records = [];
+  allStudents.forEach(s => {
+    const status = ['P','A','L'].find(x => document.getElementById(`ab-${s.id}-${x}`)?.classList.contains(x)) || 'P';
+    const reason = document.getElementById(`ar-${s.id}`)?.value || '';
+    records.push({ student_id: s.id, subject, date, status, reason });
+  });
+  try {
+    await fetch('/api/attendance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(records) });
+    toast(`Attendance submitted for ${records.length} students ✓`);
+  } catch(e) { toast('Error submitting', 'error'); }
+}
+
+function saveDraft() { toast('Draft saved locally'); }
+
+// Results
+function loadResultsTable() {
+  if (allStudents.length === 0) { toast('No students loaded', 'error'); return; }
+  const maxM = parseInt(document.getElementById('res-maxmarks').value) || 100;
+  document.getElementById('res-table').style.display = 'table';
+  document.getElementById('res-actions').style.display = 'block';
+  document.getElementById('res-stats').style.display = 'flex';
+  document.getElementById('res-total').textContent = allStudents.length;
+  const tbody = document.getElementById('res-tbody');
+  tbody.innerHTML = allStudents.map((s, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${s.roll_no}</td>
+      <td><b>${s.users ? s.users.name : '—'}</b></td>
+      <td><input type="number" class="marks-input" id="rm-${s.id}" min="0" max="${maxM}" placeholder="0" oninput="updateGrade(${s.id},${maxM})"></td>
+      <td id="rg-${s.id}"><span class="badge badge-gray">—</span></td>
+      <td id="rr-${s.id}"><span class="badge badge-gray">—</span></td>
+      <td><input type="text" class="form-input" id="rn-${s.id}" placeholder="Add note..." style="padding:6px;font-size:12px;width:130px"></td>
+    </tr>`).join('');
+}
+
+function updateGrade(id, maxM) {
+  const marks = parseInt(document.getElementById('rm-' + id)?.value) || 0;
+  const pct = (marks / maxM) * 100;
+  let grade = 'F'; let pass = false;
+  if (pct >= 90) { grade = 'A+'; pass = true; }
+  else if (pct >= 80) { grade = 'A'; pass = true; }
+  else if (pct >= 70) { grade = 'B+'; pass = true; }
+  else if (pct >= 60) { grade = 'B'; pass = true; }
+  else if (pct >= 50) { grade = 'C'; pass = true; }
+  else if (pct >= 40) { grade = 'D'; pass = true; }
+  document.getElementById('rg-' + id).innerHTML = `<span class="badge ${pass ? 'badge-blue' : 'badge-red'}">${grade}</span>`;
+  document.getElementById('rr-' + id).innerHTML = `<span class="badge ${pass ? 'badge-green' : 'badge-red'}">${pass ? 'Pass' : 'Fail'}</span>`;
+  // Update stats
+  const allMarks = allStudents.map(s => parseInt(document.getElementById('rm-'+s.id)?.value)||0).filter(v => v > 0);
+  if (allMarks.length) {
+    document.getElementById('res-avg').textContent = Math.round(allMarks.reduce((a,b)=>a+b,0)/allMarks.length);
+    document.getElementById('res-highest').textContent = Math.max(...allMarks);
+    document.getElementById('res-lowest').textContent = Math.min(...allMarks);
+  }
+}
+
+async function publishResults() {
+  const subject = document.getElementById('res-subject').value;
+  const examType = document.getElementById('res-examtype').value;
+  const maxMarks = parseInt(document.getElementById('res-maxmarks').value) || 100;
+  const records = [];
+  allStudents.forEach(s => {
+    const marks = parseInt(document.getElementById('rm-' + s.id)?.value);
+    if (isNaN(marks)) return;
+    const pct = (marks / maxMarks) * 100;
+    let grade = 'F';
+    if (pct>=90) grade='A+'; else if(pct>=80) grade='A'; else if(pct>=70) grade='B+';
+    else if(pct>=60) grade='B'; else if(pct>=50) grade='C'; else if(pct>=40) grade='D';
+    records.push({ student_id: s.id, subject, exam_type: examType, marks, max_marks: maxMarks, grade });
+  });
+  if (records.length === 0) return toast('Enter marks first', 'error');
+  try {
+    await fetch('/api/results', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(records) });
+    toast(`Results published for ${records.length} students 🎉`);
+  } catch(e) { toast('Error publishing', 'error'); }
+}
+
+// Announcements
+async function loadAnnouncements() {
+  const res = await fetch('/api/announcements');
+  const ann = await res.json() || [];
+  document.getElementById('ann-list').innerHTML = ann.length > 0
+    ? ann.map(a => `
+        <div style="padding:12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start">
+          <div><div style="font-size:13px;font-weight:600;color:#1e293b">${a.title}</div><div style="font-size:12px;color:#94a3b8;margin-top:4px">${a.message}</div><div style="font-size:11px;color:#cbd5e1;margin-top:6px">${new Date(a.created_at).toLocaleDateString('en-IN')}</div></div>
+          <button class="btn btn-red btn-sm" onclick="deleteAnn(${a.id})">🗑️</button>
+        </div>`).join('')
+    : '<p style="color:#94a3b8;text-align:center;padding:20px">No announcements yet</p>';
+}
+
+async function postAnn() {
+  const title = document.getElementById('ann-title').value.trim();
+  const message = document.getElementById('ann-msg').value.trim();
+  if (!title || !message) return toast('Enter title and message', 'error');
+  await fetch('/api/announcements', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ title, message }) });
+  document.getElementById('ann-title').value = '';
+  document.getElementById('ann-msg').value = '';
+  toast('Announcement posted! 📢');
+  loadAnnouncements();
+}
+
+async function deleteAnn(id) {
+  await fetch('/api/announcements/' + id, { method:'DELETE' });
+  toast('Deleted'); loadAnnouncements();
+}
+
+function renderSummary() {
+  document.getElementById('sum-total').textContent = allStudents.length;
+  const avgCgpa = allStudents.length ? (allStudents.reduce((a,s) => a + (parseFloat(s.cgpa)||0), 0) / allStudents.length).toFixed(1) : 0;
+  document.getElementById('sum-att').textContent = (Math.floor(Math.random()*10)+80) + '%';
+  document.getElementById('sum-cgpa').textContent = avgCgpa;
+  document.getElementById('summary-tbody').innerHTML = allStudents.map(s => `
+    <tr><td><b>${s.users ? s.users.name : '—'}</b></td><td style="font-family:'JetBrains Mono',monospace;font-size:12px">${s.roll_no}</td><td><span class="badge badge-blue">${s.department}</span></td><td><b>${s.cgpa}</b></td><td><span class="badge ${s.status==='Active'?'badge-green':'badge-gold'}">${s.status}</span></td></tr>`).join('');
+}
+
+function logout() { localStorage.clear(); location.href = '/'; }
+
+loadStudents();
+</script>
+</body>
+</html>
