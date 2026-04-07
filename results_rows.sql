@@ -1,0 +1,1 @@
+INSERT INTO "public"."results" ("id", "student_id", "subject", "exam_type", "marks", "max_marks", "grade") VALUES (1, 24316, 'dbms', 'final', 80, 100, 'A'), (2, 24316, 'os', 'Mid term', 88, 100, 'A');

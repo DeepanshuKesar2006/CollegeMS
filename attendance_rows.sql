@@ -1,0 +1,1 @@
+INSERT INTO "public"."attendance" ("id", "student_id", "subject", "date", "status", "reason") VALUES (1, 24316, 'os', '2026-04-01', 'P', null);

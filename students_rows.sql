@@ -1,0 +1,1 @@
+INSERT INTO "public"."students" ("id", "user_id", "roll_no", "department", "cgpa", "status") VALUES (24316, 16, '24316', 'cse', 8, 'active');

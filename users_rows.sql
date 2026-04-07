@@ -1,0 +1,1 @@
+INSERT INTO "public"."users" ("id", "email", "password", "role", "name") VALUES (16, 'student@college.edu', 'student123', 'student', 'Arjun Singh'), (18, 'teacher@college.edu', 'teacher123', 'teacher', 'ms. priya sharma'), (142, 'admin@college.edu', 'admin123', 'admin', 'Admin user');
